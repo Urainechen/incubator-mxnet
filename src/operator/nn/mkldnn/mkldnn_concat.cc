@@ -20,32 +20,16 @@
 /*!
  * \file mkldnn_concat.cc
  * \brief
- * \author Wenting Jiang
+ * \author Wenting Jiang Junming Chen
 */
-#include "../concat-inl.h"
-#include "./mkldnn_ops-inl.h"
-#include "./mkldnn_base-inl.h"
+#include "./mkldnn_concat-inl.h"
+
 
 #if MXNET_USE_MKLDNN == 1
 namespace mxnet {
 namespace op {
 
-class MKLDNNConcatFwd {
-  std::shared_ptr<mkldnn::concat> fwd;
-  std::vector<std::shared_ptr<mkldnn::memory>> data;
-  std::vector<mkldnn::primitive::at> data_mem;
-  std::shared_ptr<mkldnn::memory> out;
-
- public:
-  mkldnn::concat::primitive_desc fwd_pd;
-
-  MKLDNNConcatFwd(
-      int concat_dim,
-      const std::vector<mkldnn::memory::primitive_desc> &data_md): fwd_pd(concat_dim, data_md) {
-    data.resize(data_md.size());
-  }
-
-  void SetNewMem(const std::vector<const mkldnn::memory *> &in_data,
+void MKLDNNConcatFwd::SetNewMem(const std::vector<const mkldnn::memory *> &in_data,
                  const mkldnn::memory &output) {
     CHECK_EQ(in_data.size(), data.size());
     for (size_t i = 0; i < data.size(); i++) {
@@ -65,14 +49,14 @@ class MKLDNNConcatFwd {
 
     if (this->fwd == nullptr)
       fwd.reset(new mkldnn::concat(fwd_pd, data_mem, *out));
-  }
+}
 
-  const mkldnn::concat &GetFwd() const {
+const mkldnn::concat &MKLDNNConcatFwd::GetFwd() const {
     return *fwd;
-  }
-};
+}
 
-static MKLDNNConcatFwd &GetConcatForward(
+
+MKLDNNConcatFwd &GetConcatForward(
     int concat_dim, const std::vector<NDArray> &in_data,
     const std::vector<mkldnn::memory::primitive_desc> &data_md) {
 #if DMLC_CXX11_THREAD_LOCAL
